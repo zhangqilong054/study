@@ -35,7 +35,28 @@ function clearResult(id) {
 function copyResult(id) {
   const inner = document.querySelector(`#${id} .result-inner`);
   if (!inner) return;
-  navigator.clipboard.writeText(inner.innerText).then(() => showToast("✅ 已复制到剪贴板")).catch(() => showToast("❌ 复制失败"));
+  const text = inner.innerText;
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => showToast("✅ 已复制到剪贴板")).catch(() => showToast("❌ 复制失败"));
+    return;
+  }
+
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand("copy");
+    showToast("✅ 已复制到剪贴板");
+  } catch (e) {
+    showToast("❌ 复制失败");
+  } finally {
+    document.body.removeChild(ta);
+  }
 }
 
 function downloadResult(id) {
@@ -84,9 +105,29 @@ async function apiPost(url, body, isFormData = false) {
     opts.headers = { "Content-Type": "application/json" };
     opts.body = JSON.stringify(body);
   }
-  const res = await fetch(API + url, opts);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "请求失败");
+
+  let res;
+  try {
+    res = await fetch(API + url, opts);
+  } catch (e) {
+    throw new Error("网络连接失败，请检查后端服务是否已启动");
+  }
+
+  const contentType = res.headers.get("content-type") || "";
+  let data = {};
+
+  if (contentType.includes("application/json")) {
+    try {
+      data = await res.json();
+    } catch (e) {
+      data = {};
+    }
+  } else {
+    const text = await res.text();
+    data = { error: text || `服务返回异常响应（${res.status}）` };
+  }
+
+  if (!res.ok) throw new Error(data.error || `请求失败（${res.status}）`);
   return data;
 }
 

@@ -28,7 +28,7 @@ def _detect_affair_type(query):
     """检测查询中包含的事务类型"""
     query_lower = query.lower()
     for affair, keywords in AFFAIR_KEYWORDS.items():
-        if any(kw in query_lower for kw in keywords):
+        if any(kw.lower() in query_lower for kw in keywords):
             return affair
     return None
 

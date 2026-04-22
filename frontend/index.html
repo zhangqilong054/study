@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智校通 — 高校AI学习与事务辅助平台</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🎓</span>
+        <span class="logo-text">智校通</span>
+        <span class="logo-sub">高校AI助手</span>
+      </div>
+      <nav class="nav">
+        <button class="nav-btn active" data-tab="academic">📚 学术辅助</button>
+        <button class="nav-btn" data-tab="affairs">🏫 校园事务</button>
+        <button class="nav-btn" data-tab="growth">🎯 成长助手</button>
+        <button class="nav-btn" data-tab="about">ℹ️ 关于</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- 学术辅助 -->
+    <section id="tab-academic" class="tab-content active">
+      <div class="section-header">
+        <h2>📚 AI学术辅助</h2>
+        <p>上传课件/教材，自动提炼知识点、生成练习题与复习计划</p>
+      </div>
+      <div class="card-grid">
+        <!-- 知识点提炼 -->
+        <div class="card">
+          <div class="card-title">📖 知识点提炼</div>
+          <div class="card-body">
+            <div class="upload-area" id="uploadArea">
+              <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt,.md" hidden />
+              <div class="upload-placeholder" id="uploadPlaceholder">
+                <span>📎 点击上传或拖拽文件</span>
+                <small>支持 PDF、Word、TXT、Markdown</small>
+              </div>
+              <div class="upload-selected" id="uploadSelected" style="display:none"></div>
+            </div>
+            <label>或直接粘贴课程内容：</label>
+            <textarea id="extractText" rows="4" placeholder="粘贴课件文字内容…"></textarea>
+            <button class="btn btn-primary" onclick="extractKnowledge()">🔍 提炼知识点</button>
+          </div>
+          <div class="result-box" id="extractResult"></div>
+        </div>
+
+        <!-- 练习题生成 -->
+        <div class="card">
+          <div class="card-title">✏️ 练习题生成</div>
+          <div class="card-body">
+            <label>知识点内容：</label>
+            <textarea id="qContent" rows="4" placeholder="输入知识点或课程内容…"></textarea>
+            <div class="form-row">
+              <div class="form-group">
+                <label>题目数量</label>
+                <input type="number" id="qCount" value="5" min="1" max="20" />
+              </div>
+              <div class="form-group">
+                <label>题型</label>
+                <select id="qType">
+                  <option value="mixed">混合题型</option>
+                  <option value="single">单选题</option>
+                  <option value="multiple">多选题</option>
+                  <option value="short">简答题</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="generateQuestions()">🎲 生成练习题</button>
+          </div>
+          <div class="result-box" id="questionsResult"></div>
+        </div>
+
+        <!-- 复习计划 -->
+        <div class="card">
+          <div class="card-title">📅 复习计划生成</div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>课程名称 *</label>
+              <input type="text" id="spSubject" placeholder="如：高等数学、数据结构" />
+            </div>
+            <div class="form-group">
+              <label>考试日期</label>
+              <input type="date" id="spExamDate" />
+            </div>
+            <div class="form-group">
+              <label>薄弱知识点</label>
+              <input type="text" id="spWeak" placeholder="如：积分、动态规划" />
+            </div>
+            <div class="form-group">
+              <label>每日可用时间（小时）</label>
+              <input type="number" id="spHours" value="2" min="0.5" max="12" step="0.5" />
+            </div>
+            <button class="btn btn-primary" onclick="generateStudyPlan()">📋 生成复习计划</button>
+          </div>
+          <div class="result-box" id="studyPlanResult"></div>
+        </div>
+
+        <!-- 文献综述 -->
+        <div class="card">
+          <div class="card-title">📄 文献综述辅助</div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>研究主题 *</label>
+              <input type="text" id="litTopic" placeholder="如：深度学习在医疗影像中的应用" />
+            </div>
+            <div class="form-group">
+              <label>研究领域</label>
+              <input type="text" id="litField" placeholder="如：计算机科学、医学" />
+            </div>
+            <button class="btn btn-primary" onclick="generateLiteratureReview()">📝 生成综述框架</button>
+          </div>
+          <div class="result-box" id="litResult"></div>
+        </div>
+
+        <!-- 实验报告 -->
+        <div class="card">
+          <div class="card-title">🔬 实验报告辅助</div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>实验名称 *</label>
+              <input type="text" id="labName" placeholder="如：单摆测重力加速度" />
+            </div>
+            <div class="form-group">
+              <label>实验目的</label>
+              <input type="text" id="labPurpose" placeholder="实验目的…" />
+            </div>
+            <div class="form-group">
+              <label>实验步骤</label>
+              <textarea id="labMethod" rows="3" placeholder="主要实验步骤…"></textarea>
+            </div>
+            <div class="form-group">
+              <label>实验数据/结果</label>
+              <textarea id="labData" rows="2" placeholder="记录的数据或观察结果…"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="generateLabReport()">🧪 生成报告初稿</button>
+          </div>
+          <div class="result-box" id="labResult"></div>
+        </div>
+
+        <!-- 错题整理 -->
+        <div class="card">
+          <div class="card-title">❌ 错题分析</div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>课程名称</label>
+              <input type="text" id="wqSubject" placeholder="如：线性代数" />
+            </div>
+            <label>错题内容（可多道）：</label>
+            <textarea id="wqContent" rows="5" placeholder="粘贴错题题目及你的错误解答…"></textarea>
+            <button class="btn btn-primary" onclick="analyzeWrongQuestions()">🔍 分析错题</button>
+          </div>
+          <div class="result-box" id="wqResult"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 校园事务 -->
+    <section id="tab-affairs" class="tab-content">
+      <div class="section-header">
+        <h2>🏫 校园事务AI问答</h2>
+        <p>查询请假、奖助学金、证件补办等校园事务流程，生成申请模板</p>
+      </div>
+      <div class="affairs-layout">
+        <!-- 快捷入口 -->
+        <div class="affairs-quick">
+          <div class="quick-title">🔖 常见事务快捷查询</div>
+          <div class="quick-buttons">
+            <button class="quick-btn" onclick="quickQuery('如何办理请假手续？请详细说明流程、材料和注意事项')">🏥 请假手续</button>
+            <button class="quick-btn" onclick="quickQuery('奖学金申请流程是什么？需要什么材料和条件？')">🏆 奖学金申请</button>
+            <button class="quick-btn" onclick="quickQuery('助学金如何申请？需要什么证明材料？')">💰 助学金申请</button>
+            <button class="quick-btn" onclick="quickQuery('学生证丢失了如何补办？需要什么材料？')">🪪 学生证补办</button>
+            <button class="quick-btn" onclick="quickQuery('校园卡丢失了如何补办？')">💳 校园卡补办</button>
+            <button class="quick-btn" onclick="quickQuery('如何申请转专业？条件和流程是什么？')">🔄 转专业申请</button>
+            <button class="quick-btn" onclick="quickQuery('成绩不及格怎么办？补考和重修如何申请？')">📊 成绩问题</button>
+            <button class="quick-btn" onclick="quickQuery('毕业离校手续如何办理？需要注意什么？')">🎓 毕业手续</button>
+          </div>
+        </div>
+
+        <!-- 问答区域 -->
+        <div class="chat-container">
+          <div class="chat-messages" id="affairsChat">
+            <div class="message bot-msg">
+              <span class="msg-avatar">🤖</span>
+              <div class="msg-content">
+                <p>您好！我是智校通校园事务助手 👋</p>
+                <p>我可以帮您查询各类校园事务的办理流程、所需材料和注意事项，也可以为您生成申请模板。</p>
+                <p>请问有什么可以帮您的？</p>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input">
+            <textarea id="affairsInput" rows="2" placeholder="输入您的问题，如：请假流程、奖学金申请…" onkeydown="chatKeydown(event, 'affairs')"></textarea>
+            <button class="btn btn-primary" onclick="sendAffairsMessage()">发送</button>
+          </div>
+        </div>
+
+        <!-- 申请模板生成 -->
+        <div class="card template-card">
+          <div class="card-title">📋 申请模板生成</div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>申请类型 *</label>
+              <select id="templateType">
+                <option value="">请选择申请类型</option>
+                <option value="请假申请">请假申请</option>
+                <option value="奖学金申请">奖学金申请</option>
+                <option value="助学金申请">助学金申请</option>
+                <option value="转专业申请">转专业申请</option>
+                <option value="休学申请">休学申请</option>
+                <option value="宿舍调换申请">宿舍调换申请</option>
+                <option value="成绩申诉申请">成绩申诉申请</option>
+                <option value="奖项推荐信">奖项推荐信（自荐信）</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="tmplName" placeholder="您的姓名" />
+              </div>
+              <div class="form-group">
+                <label>学号</label>
+                <input type="text" id="tmplId" placeholder="学号" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>专业班级</label>
+                <input type="text" id="tmplClass" placeholder="如：计算机2201班" />
+              </div>
+              <div class="form-group">
+                <label>联系方式</label>
+                <input type="text" id="tmplContact" placeholder="手机号" />
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="generateTemplate()">📝 生成申请模板</button>
+          </div>
+          <div class="result-box" id="templateResult"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 成长助手 -->
+    <section id="tab-growth" class="tab-content">
+      <div class="section-header">
+        <h2>🎯 个性化成长助手</h2>
+        <p>学业规划、简历优化、面试训练，全方位支持您的大学成长</p>
+      </div>
+      <div class="card-grid">
+        <!-- 学业规划 -->
+        <div class="card">
+          <div class="card-title">🗺️ 学业与职业规划</div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>专业 *</label>
+              <input type="text" id="cpMajor" placeholder="如：软件工程" />
+            </div>
+            <div class="form-group">
+              <label>年级</label>
+              <select id="cpGrade">
+                <option value="">请选择</option>
+                <option value="大一">大一</option>
+                <option value="大二">大二</option>
+                <option value="大三">大三</option>
+                <option value="大四">大四</option>
+                <option value="研究生">研究生</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>兴趣方向</label>
+              <input type="text" id="cpInterests" placeholder="如：后端开发、数据分析" />
+            </div>
+            <div class="form-group">
+              <label>目标/期望</label>
+              <input type="text" id="cpGoals" placeholder="如：考研、出国、互联网就业" />
+            </div>
+            <button class="btn btn-primary" onclick="getCareerPlan()">🚀 生成规划建议</button>
+          </div>
+          <div class="result-box" id="careerPlanResult"></div>
+        </div>
+
+        <!-- 简历优化 -->
+        <div class="card">
+          <div class="card-title">📄 简历优化</div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label>目标岗位</label>
+                <input type="text" id="resumePos" placeholder="如：后端开发工程师" />
+              </div>
+              <div class="form-group">
+                <label>目标行业</label>
+                <input type="text" id="resumeIndustry" placeholder="如：互联网、金融" />
+              </div>
+            </div>
+            <label>简历内容：</label>
+            <textarea id="resumeContent" rows="8" placeholder="粘贴您的简历文字内容…"></textarea>
+            <button class="btn btn-primary" onclick="optimizeResume()">✨ 优化简历</button>
+          </div>
+          <div class="result-box" id="resumeResult"></div>
+        </div>
+
+        <!-- 面试训练 -->
+        <div class="card">
+          <div class="card-title">🎤 面试表达训练</div>
+          <div class="card-body">
+            <div class="tab-sub">
+              <button class="tab-sub-btn active" onclick="switchInterviewMode('practice', this)">练习模式</button>
+              <button class="tab-sub-btn" onclick="switchInterviewMode('generate', this)">题目生成</button>
+            </div>
+            <div id="interviewPractice">
+              <div class="form-group">
+                <label>目标岗位</label>
+                <input type="text" id="ivPosition" placeholder="如：产品经理" />
+              </div>
+              <div class="form-group">
+                <label>面试题目 *</label>
+                <input type="text" id="ivQuestion" placeholder="如：请做一下自我介绍" />
+              </div>
+              <div class="form-group">
+                <label>您的回答 *</label>
+                <textarea id="ivAnswer" rows="4" placeholder="输入您的面试回答…"></textarea>
+              </div>
+              <button class="btn btn-primary" onclick="practiceInterview()">💬 获取点评</button>
+            </div>
+            <div id="interviewGenerate" style="display:none">
+              <div class="form-group">
+                <label>目标岗位 *</label>
+                <input type="text" id="ivGenPosition" placeholder="如：前端开发工程师" />
+              </div>
+              <button class="btn btn-primary" onclick="generateInterviewQuestions()">🎲 生成面试题</button>
+            </div>
+          </div>
+          <div class="result-box" id="interviewResult"></div>
+        </div>
+
+        <!-- 校园生活导航 -->
+        <div class="card">
+          <div class="card-title">🧭 校园生活导航</div>
+          <div class="card-body">
+            <div class="campus-quick">
+              <button class="quick-btn small" onclick="campusNav('图书馆怎么预约自习室？')">📚 图书馆</button>
+              <button class="quick-btn small" onclick="campusNav('大学如何高效学习？有哪些建议？')">💡 学习方法</button>
+              <button class="quick-btn small" onclick="campusNav('如何参加学生社团和竞赛？')">🏅 社团竞赛</button>
+              <button class="quick-btn small" onclick="campusNav('大学生心理健康问题如何寻求帮助？')">🧠 心理健康</button>
+              <button class="quick-btn small" onclick="campusNav('大学校医院如何就诊和报销？')">🏥 校医院</button>
+              <button class="quick-btn small" onclick="campusNav('如何充分利用大学四年时光？')">⭐ 大学规划</button>
+            </div>
+            <textarea id="campusNavInput" rows="2" placeholder="输入校园生活相关问题…"></textarea>
+            <button class="btn btn-primary" onclick="askCampusNav()">🔍 获取建议</button>
+          </div>
+          <div class="result-box" id="campusNavResult"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 关于 -->
+    <section id="tab-about" class="tab-content">
+      <div class="about-content">
+        <div class="about-hero">
+          <div class="about-logo">🎓</div>
+          <h1>智校通</h1>
+          <p class="about-tagline">面向高校场景的AI学习与事务辅助平台</p>
+        </div>
+        <div class="about-features">
+          <div class="feature-item">
+            <div class="feature-icon">📚</div>
+            <div class="feature-text">
+              <h3>AI学术辅助</h3>
+              <p>上传课件自动提炼知识点、生成练习题和复习计划，辅助文献综述与实验报告写作</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🏫</div>
+            <div class="feature-text">
+              <h3>校园事务问答</h3>
+              <p>一站式查询请假、奖助学金、证件补办等流程，自动生成标准化申请模板</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🎯</div>
+            <div class="feature-text">
+              <h3>个性化成长</h3>
+              <p>学业与职业规划建议、简历优化指导、面试表达训练，全方位助力成长</p>
+            </div>
+          </div>
+        </div>
+        <div class="about-setup">
+          <h3>⚙️ 配置说明</h3>
+          <p>本平台支持接入任意兼容 OpenAI 接口的 AI 服务。在 <code>backend/.env</code> 文件中配置：</p>
+          <pre><code>AI_API_KEY=你的API密钥
+AI_API_BASE=https://api.openai.com/v1
+AI_MODEL=gpt-3.5-turbo</code></pre>
+          <p>未配置 API Key 时，平台将以演示模式运行，返回示例结果。</p>
+          <h3>🚀 启动方式</h3>
+          <pre><code>cd backend
+pip install -r requirements.txt
+python app.py</code></pre>
+          <p>默认在 <code>http://localhost:5000</code> 启动。</p>
+        </div>
+        <div class="about-footer">
+          <p>大学生创新大赛项目 · 智校通团队</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Loading 遮罩 -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>AI 思考中…</p>
+    </div>
+  </div>
+
+  <!-- Toast 通知 -->
+  <div class="toast" id="toast"></div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
